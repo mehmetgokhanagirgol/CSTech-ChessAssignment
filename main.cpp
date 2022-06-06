@@ -45,6 +45,7 @@ double checkPawnThreat(int i, int j, int side, vector<vector<box>> &board){
     // it will be easier to check pawn point by point since it has no piercing action
     double piecePoint;
     double penalty = 0;
+    // check pawnthreat squares if the piece was already under threat do nothing
     if(side == 1){
         if(inBounds(i+1, j+1) && board[i+1][j+1].piece[1] == 'b'){
             if(!board[i+1][j+1].underThreat){
@@ -82,15 +83,34 @@ double checkPawnThreat(int i, int j, int side, vector<vector<box>> &board){
 
 double checkKnightThreat(int i, int j, int side, vector<vector<box>> &board){
     // it will be easier to check knight point by point since it has no piercing action
+    // But 8 if's would be too much for readability, lets loop through threat square vector that we define
     double piecePoint;
     double penalty = 0;
+    // knight threat vector = ktv
+    vector<pair<int, int>> ktv = {{2, 1},{2, -1},{-2, 1},{-2, -1},{1, 2},{1, -2},{-1, -2},{-1, 2}};
     if(side == 1){
-
+        for(unsigned long k = 0; k < ktv.size(); ++k){
+            if(inBounds(i+ktv[k].first, j+ktv[k].second) && board[i+ktv[k].first][j+ktv[k].second].piece[1] == 'b'){
+                if(!board[i+ktv[k].first][j+ktv[k].second].underThreat){
+                    piecePoint = checkPiece(board[i+ktv[k].first][j+ktv[k].second].piece[0]);
+                    penalty += piecePoint/2;
+                    board[i+ktv[k].first][j+ktv[k].second].underThreat = true;
+                }
+            }
+        }
     }
     else{
-
+        for(unsigned long k = 0; k < ktv.size(); ++k){
+            if(inBounds(i+ktv[k].first, j+ktv[k].second) && board[i+ktv[k].first][j+ktv[k].second].piece[1] == 's'){
+                if(!board[i+ktv[k].first][j+ktv[k].second].underThreat){
+                    piecePoint = checkPiece(board[i+ktv[k].first][j+ktv[k].second].piece[0]);
+                    penalty += piecePoint/2;
+                    board[i+ktv[k].first][j+ktv[k].second].underThreat = true;
+                }
+            }
+        }
     }
-    return 0;
+    return penalty;
 }
 
 double checkQueenThreat(int i, int j, int side, vector<vector<box>> &board){
