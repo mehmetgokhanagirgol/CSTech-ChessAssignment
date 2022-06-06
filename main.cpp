@@ -4,6 +4,12 @@
 
 using namespace std;
 
+
+/* We will take inputs from the text file and convert it to a vector<vector<box>>
+I use box here to check if a piece was already attacked by another piece, so that I dont keep halving the value of the piece
+Next , I calculate the total points of the pieces without threats. Then I substract the threatpenalties to come with the result.
+*/
+
 struct box{
     string piece;
     bool underThreat;
@@ -40,6 +46,27 @@ double checkPiece(char piece){
     }
     return piecePoint;
 }
+
+double checkQueenLeft(int i, int j, char side, vector<vector<box>> &board, double penalty, int directionX, int directionY){
+    double piecePoint;
+    while(inBounds(i+=directionX, j+=directionY)){
+            if(board[i][j].piece.compare("--")){
+                //hit
+                if(board[i][j].piece[1] == side)
+                    break;
+                else{
+                    if(!board[i][j].underThreat){
+                        piecePoint = checkPiece(board[i][j].piece[0]);
+                        penalty += piecePoint/2;
+                        board[i][j].underThreat = true;
+                    }
+                    break; 
+                }
+            }
+        }
+    return penalty;
+}
+
 
 double checkPawnThreat(int i, int j, int side, vector<vector<box>> &board){
     // it will be easier to check pawn point by point since it has no piercing action
@@ -86,7 +113,7 @@ double checkKnightThreat(int i, int j, int side, vector<vector<box>> &board){
     // But 8 if's would be too much for readability, lets loop through threat square vector that we define
     double piecePoint;
     double penalty = 0;
-    // knight threat vector = ktv
+    // knight threat vector = ktv, knight goes L shape so combinations of 2,1
     vector<pair<int, int>> ktv = {{2, 1},{2, -1},{-2, 1},{-2, -1},{1, 2},{1, -2},{-1, -2},{-1, 2}};
     if(side == 1){
         for(unsigned long k = 0; k < ktv.size(); ++k){
@@ -114,7 +141,36 @@ double checkKnightThreat(int i, int j, int side, vector<vector<box>> &board){
 }
 
 double checkQueenThreat(int i, int j, int side, vector<vector<box>> &board){
-    return 0;
+    // this could be tricky as queen has a range not points for attack
+    // when hit comes we should break out of the diagonal and go next
+    // we should check right,left,up,down and diagonals seperately when we hit a piece if its opposite add a penalty and break, if not just break.
+    double piecePoint;
+    double penalty = 0;
+    if(side == 1){
+        //left
+        penalty = checkQueenLeft(i, j, 's', board, penalty, -1, 0);
+        penalty = checkQueenLeft(i, j, 's', board, penalty, 1, 0);
+        penalty = checkQueenLeft(i, j, 's', board, penalty, 0, 1);
+        penalty = checkQueenLeft(i, j, 's', board, penalty, 0, -1);
+        penalty = checkQueenLeft(i, j, 's', board, penalty, 1, 1);
+        penalty = checkQueenLeft(i, j, 's', board, penalty, -1, -1);
+        penalty = checkQueenLeft(i, j, 's', board, penalty, -1, 1);
+        penalty = checkQueenLeft(i, j, 's', board, penalty, 1, -1);
+        
+    }
+    else{
+
+        penalty = checkQueenLeft(i, j, 'b', board, penalty, -1, 0);
+        penalty = checkQueenLeft(i, j, 'b', board, penalty, 1, 0);
+        penalty = checkQueenLeft(i, j, 'b', board, penalty, 0, 1);
+        penalty = checkQueenLeft(i, j, 'b', board, penalty, 0, -1);
+        penalty = checkQueenLeft(i, j, 'b', board, penalty, 1, 1);
+        penalty = checkQueenLeft(i, j, 'b', board, penalty, -1, -1);
+        penalty = checkQueenLeft(i, j, 'b', board, penalty, -1, 1);
+        penalty = checkQueenLeft(i, j, 'b', board, penalty, 1, -1);
+
+    }
+    return penalty;
 }
 
 void takeInput(vector<vector<box>> &board){
@@ -218,6 +274,6 @@ int main(){
     // I will use 0 to indicate white and 1 to indicate black
     threatPenaltyWhite = threatPenalty(1, board);
     threatPenaltyBlack = threatPenalty(0, board);
-    cout << points.first - threatPenaltyWhite << " " << points.second - threatPenaltyBlack << endl;
+    cout << "Beyaz:" << points.first - threatPenaltyWhite << " " << "Siyah:" << points.second - threatPenaltyBlack << endl;
     return 0;
 }
